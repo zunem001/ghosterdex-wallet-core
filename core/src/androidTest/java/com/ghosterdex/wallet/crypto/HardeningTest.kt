@@ -257,7 +257,7 @@ class HardeningTest {
     @Test
     fun derivationFamiliesProduceDifferentKeys() {
         // A wrong contract version is the same key at another address. A wrong
-        // *family* is a different key entirely. So a Ledger or Trust Wallet
+        // *family* is a different key entirely. So a Ledger or FoxWallet
         // user importing here would see an empty wallet if only TON's native
         // scheme were tried. Both must be probed.
         val native = TonKey.fromMnemonic(

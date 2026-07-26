@@ -13,9 +13,9 @@ package com.ghosterdex.wallet.crypto
  * | Family | Used by |
  * |---|---|
  * | [NATIVE] | Tonkeeper, MyTonWallet, Telegram Wallet, TON's own scheme |
- * | [BIP44] | Ledger, Trust Wallet, FoxWallet, Tether WDK, SLIP-0044 coin type 607 |
+ * | [BIP44] | Ledger, FoxWallet, Tether WDK, SLIP-0044 coin type 607 |
  *
- * So a Trust Wallet or Ledger user importing their phrase would, under native
+ * So a Ledger or FoxWallet user importing their phrase would, under native
  * derivation alone, get a valid key that has never held anything. And be told
  * their wallet is empty. Import therefore derives both families and probes
  * every address of each.

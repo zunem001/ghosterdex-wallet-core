@@ -35,7 +35,7 @@ object Slip10 {
     /**
      * TON's BIP44 path, SLIP-0044 coin type 607.
      *
-     * Used by Ledger, Trust Wallet and others *instead of* TON's native
+     * Used by Ledger, FoxWallet and others *instead of* TON's native
      * mnemonic scheme, producing an entirely different key from the same
      * phrase. See [TonDerivation].
      */

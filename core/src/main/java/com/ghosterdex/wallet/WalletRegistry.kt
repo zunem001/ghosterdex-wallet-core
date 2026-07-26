@@ -37,7 +37,7 @@ object WalletRegistry {
     private const val KEY_ACTIVE = "active_slot"
     private const val KEY_NEXT = "next_slot"
 
-    /** Trust Wallet caps at far more; this is about what a phone can sensibly hold. */
+    /** Not a technical limit; this is about what a phone can sensibly hold. */
     const val MAX_WALLETS = 20
 
     data class Record(
