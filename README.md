@@ -39,8 +39,9 @@ demonstrate otherwise. Clone it, read it, run them.
 Zone, referrals. None of it handles keys, and none of it is needed to check the
 claims above.
 
-This is the same split Trust Wallet uses, and it comes with the same honest
-limitation. Read [Verifying the claims](#verifying-the-claims) before deciding
+Publishing the core and keeping the application closed is a deliberate split,
+and it has a limit worth stating plainly rather than leaving for someone to
+discover. Read [Verifying the claims](#verifying-the-claims) before deciding
 what this repo does and does not prove.
 
 ## Running the tests
