@@ -1,0 +1,45 @@
+apply plugin: 'com.android.library'
+apply plugin: 'org.jetbrains.kotlin.android'
+
+android {
+    namespace 'com.ghosterdex.wallet'
+    compileSdk 36
+
+    defaultConfig {
+        // Matches the shipped app. The Keystore behaviour this library relies
+        // on differs across these levels, so testing at the app's own floor is
+        // the only test that means anything.
+        minSdk 23
+        targetSdk 35
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    kotlinOptions { jvmTarget = '21' }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.15.0'
+
+    // BiometricPrompt. Needed for CryptoObject-bound authentication, which is
+    // what makes "every signature requires the user" an OS guarantee rather
+    // than a check the caller could skip.
+    implementation 'androidx.biometric:biometric:1.1.0'
+
+    // Bouncy Castle through its lightweight API (org.bouncycastle.crypto.*),
+    // never registered as a JCE provider: Android ships its own stripped copy
+    // and the two collide.
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.79'
+
+    // The tests bring their own Activity (TestHostActivity) because
+    // BiometricPrompt needs a window and this library ships no UI.
+    androidTestImplementation 'androidx.appcompat:appcompat:1.7.0'
+    androidTestImplementation 'androidx.fragment:fragment-ktx:1.8.4'
+    androidTestImplementation 'androidx.test:core:1.6.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test:rules:1.6.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+}
