@@ -11,6 +11,7 @@ import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
 import java.text.Normalizer
+import kotlin.math.min
 
 /**
  * BIP39 mnemonic generation, validation and seed derivation.
@@ -66,6 +67,47 @@ object Bip39 {
         wordlist = loaded
         wordIndex = loaded.withIndex().associate { (i, w) -> w to i }
         return loaded
+    }
+
+    /**
+     * Words from the bundled list that begin with [prefix], for the restore
+     * screen's suggestions.
+     *
+     * The suggestions have to come from here rather than from the keyboard.
+     * A system dictionary that "corrects" a recovery word is a known way to
+     * lose a wallet, which is why every phrase field sets
+     * `TYPE_TEXT_FLAG_NO_SUGGESTIONS` and asks for no personalised learning.
+     * This offers the same convenience from the only list that is actually
+     * authoritative, offline, with nothing typed leaving the process.
+     *
+     * BIP39 guarantees the first four letters identify a word, so a prefix of
+     * four or more can only match one entry, and the caller can accept it
+     * without ambiguity.
+     */
+    fun suggest(context: Context, prefix: String, limit: Int = 24): List<String> {
+        if (prefix.isEmpty()) return emptyList()
+        val list = words(context)
+        // The list is sorted, so matches for a prefix are one contiguous run:
+        // binary search to its start and walk while the prefix still holds.
+        var lo = 0
+        var hi = list.size
+        while (lo < hi) {
+            val mid = (lo + hi) ushr 1
+            if (list[mid] < prefix) lo = mid + 1 else hi = mid
+        }
+        val out = ArrayList<String>(min(limit, 8))
+        var i = lo
+        while (i < list.size && out.size < limit && list[i].startsWith(prefix)) {
+            out.add(list[i])
+            i++
+        }
+        return out
+    }
+
+    /** True when [word] is in the bundled list exactly. */
+    fun isWord(context: Context, word: String): Boolean {
+        words(context)
+        return wordIndex?.containsKey(word) == true
     }
 
     /**
