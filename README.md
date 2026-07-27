@@ -4,7 +4,9 @@ The cryptographic core of the [GhosterDex](https://ghosterdex.com) wallet: key
 generation, derivation, and the sealing that keeps a recovery phrase on the
 device it was created on.
 
-Published so the security claims can be checked rather than believed.
+Published so the security claims can be checked rather than believed. This is
+the key handling and its tests, not the whole application: what is in and out
+of scope is listed in full below, before you read anything else into it.
 
 ```
 83 instrumented tests, run against a real Android Keystore.
@@ -153,6 +155,13 @@ links to the same file.
 
 Please do not open a public issue for anything exploitable. Email
 `security@ghosterdex.com` and give us a chance to ship a fix first.
+
+## Where to find us
+
+- Channel: [t.me/ghosterdexx](https://t.me/ghosterdexx)
+- X: [@GhosterDex](https://x.com/GhosterDex)
+- Mini app: [t.me/GhosterdexBot](https://t.me/GhosterdexBot?startapp)
+- Site: [ghosterdex.com](https://ghosterdex.com)
 
 ## Licence
 
