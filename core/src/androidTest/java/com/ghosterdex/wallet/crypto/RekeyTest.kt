@@ -15,8 +15,8 @@ import java.nio.charset.StandardCharsets
  * Changing a wallet's lock must never change the wallet.
  *
  * Re-keying decrypts the phrase and re-seals it under a new Keystore key. The
- * whole point is that everything a user cares about. The phrase, and so the
- * address their money sits at. Comes through byte-identical. If that ever
+ * whole point is that everything a user cares about, the phrase, and so the
+ * address their money sits at, comes through byte-identical. If that ever
  * stopped being true, the failure would look like a wallet quietly emptying
  * itself, so it is pinned here.
  *
@@ -66,7 +66,7 @@ class RekeyTest {
     }
 
     /**
-     * The blob must actually be re-encrypted, not merely relabelled. A new
+     * The blob must actually be re-encrypted, not merely relabelled, a new
      * key that never touched the ciphertext would leave the old key able to
      * open it, which is the one thing changing a lock must prevent.
      */
@@ -85,7 +85,7 @@ class RekeyTest {
         assertNotEquals(ivBefore, prefs.getString("sealed_iv.$slot", null))
     }
 
-    /** Repeated changes keep working. The generation counter must advance. */
+    /** Repeated changes keep working, the generation counter must advance. */
     @Test
     fun survivesRepeatedRekeys() {
         val vault = SecureVault(context, slot)
@@ -98,7 +98,7 @@ class RekeyTest {
 
     /**
      * A re-key abandoned before its commit must leave the wallet exactly as it
-     * was. This is the interrupted-user case, and the reason the new key is
+     * was, this is the interrupted-user case, and the reason the new key is
      * built at a *pending* generation rather than over the live one.
      */
     @Test
@@ -109,7 +109,7 @@ class RekeyTest {
         val prefs = context.getSharedPreferences("ghosterdex.vault", Context.MODE_PRIVATE)
         val before = prefs.getString("sealed_mnemonic.$slot", null)
 
-        // Build the pending key, then walk away. As a cancelled prompt does.
+        // Build the pending key, then walk away, as a cancelled prompt does.
         val gen = vault.nextGeneration()
         vault.rekeyCipher(gen, SecurityPolicy.NONE)
         vault.abandonRekey(gen)

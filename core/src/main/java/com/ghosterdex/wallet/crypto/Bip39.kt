@@ -24,12 +24,12 @@ import kotlin.math.min
  * ## On wiping memory
  *
  * Secrets are handled as [CharArray] and [ByteArray] and wiped with [wipe] as
- * soon as they are dead. This is meaningfully better than using [String]. Which
+ * soon as they are dead. This is meaningfully better than using [String], which
  * is immutable and cannot be cleared, so a mnemonic held as a String lingers in
  * the heap until GC decides otherwise, and can be captured by a heap dump.
  *
  * It is not a guarantee. The JVM may relocate arrays during GC and leave copies
- * behind. The design goal is to shrink the window, not to claim it is closed -
+ * behind. The design goal is to shrink the window, not to claim it is closed,
  * the real protection is that this material never leaves Kotlin.
  */
 object Bip39 {
@@ -41,7 +41,7 @@ object Bip39 {
     @Volatile
     private var wordlist: List<String>? = null
 
-    /** Index lookup for validation/decoding. A linear scan of 2048 words per input word adds up. */
+    /** Index lookup for validation/decoding, a linear scan of 2048 words per input word adds up. */
     @Volatile
     private var wordIndex: Map<String, Int>? = null
 
@@ -113,7 +113,7 @@ object Bip39 {
     /**
      * Generates a fresh mnemonic.
      *
-     * @param strengthBits 128 for 12 words, 256 for 24. Defaults to 256. The
+     * @param strengthBits 128 for 12 words, 256 for 24. Defaults to 256, the
      *   extra six words cost the user nothing at backup time and this is a key
      *   that cannot be rotated after funds arrive.
      */
@@ -163,7 +163,7 @@ object Bip39 {
      * Validates word membership, length, and the embedded checksum.
      *
      * The checksum is what makes a single mistyped word fail loudly instead of
-     * silently deriving a different, empty wallet. The classic way users
+     * silently deriving a different, empty wallet, the classic way users
      * conclude an import "lost" their funds.
      */
     fun validate(context: Context, mnemonic: CharArray): Boolean {
@@ -172,7 +172,7 @@ object Bip39 {
 
         // Normalised in place. Previously this did `String(mnemonic).trim()`
         // with no lowercasing, so a phrase pasted with capitals failed
-        // validation even though toSeed would derive from it correctly. And it
+        // validation even though toSeed would derive from it correctly, and it
         // left an unwipeable String of the entire phrase on the heap.
         val normalized = Secrets.normalizeWords(mnemonic)
         try {
@@ -227,7 +227,7 @@ object Bip39 {
     fun toSeed(mnemonic: CharArray, passphrase: CharArray = CharArray(0)): ByteArray {
         // Word normalisation happens HERE, not at the call sites.
         //
-        // It used to be the caller's job, and every existing caller did it -
+        // It used to be the caller's job, and every existing caller did it,
         // but a caller that forgets produces a silently different seed and so
         // an empty wallet, with nothing failing anywhere. Making it
         // unconditional means a new call site cannot get this wrong.
@@ -271,7 +271,7 @@ object Bip39 {
     /**
      * NFKD-normalizes and UTF-8 encodes without ever materialising a String.
      *
-     * [Normalizer] only accepts CharSequence, so a CharBuffer wrapper is used -
+     * [Normalizer] only accepts CharSequence, so a CharBuffer wrapper is used,
      * it views the same char[] rather than copying it the way String would.
      */
     private fun normalizeToUtf8(chars: CharArray): ByteArray {

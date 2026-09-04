@@ -16,7 +16,7 @@ package com.ghosterdex.wallet.crypto
  * | [BIP44] | Ledger, FoxWallet, Tether WDK, SLIP-0044 coin type 607 |
  *
  * So a Ledger or FoxWallet user importing their phrase would, under native
- * derivation alone, get a valid key that has never held anything. And be told
+ * derivation alone, get a valid key that has never held anything, and be told
  * their wallet is empty. Import therefore derives both families and probes
  * every address of each.
  *
@@ -62,7 +62,7 @@ enum class TonDerivation(val id: String) {
      * Derives the 32-byte Ed25519 scalar for this family.
      *
      * Caller owns the result and must wipe it. Neither path validates the
-     * phrase. Both are total on arbitrary words, which is what makes probing
+     * phrase, both are total on arbitrary words, which is what makes probing
      * possible at all.
      */
     internal fun scalarFor(

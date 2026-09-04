@@ -5,7 +5,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 
 /**
- * Produces TON Connect `ton_proof` signatures. The wallet-login proof.
+ * Produces TON Connect `ton_proof` signatures, the wallet-login proof.
  *
  * This is what `/api/tonproof/verify` checks to bind a session to a wallet, and
  * it is **not** the same envelope as [TonConnectSigner]. Two differences, both

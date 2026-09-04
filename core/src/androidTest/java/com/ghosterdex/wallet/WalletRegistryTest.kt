@@ -13,11 +13,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The wallet registry. Where multi-wallet can lose someone's money quietly.
+ * The wallet registry, where multi-wallet can lose someone's money quietly.
  *
  * **Never run this suite against a phone holding a real wallet.** [reset]
  * clears the vault and registry preferences before every test, and Gradle
- * uninstalls the app once the run finishes. Which takes the sealed phrase
+ * uninstalls the app once the run finishes, which takes the sealed phrase
  * with it. Both are correct for a test device and catastrophic on a real one.
  *
  * Two failures matter more than the rest, and both are silent:
@@ -203,7 +203,7 @@ class WalletRegistryTest {
      *
      * Reported live 2026-07-26: a wallet restored from its recovery phrase
      * still read "not backed up", and the only thing that could clear that was
-     * a three-word quiz. A weaker demonstration than the twenty-four words
+     * a three-word quiz, a weaker demonstration than the twenty-four words
      * they had just typed in. The warning was both wrong and unresolvable.
      */
     @Test

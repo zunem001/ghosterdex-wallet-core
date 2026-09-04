@@ -6,7 +6,7 @@ package com.ghosterdex.wallet.crypto
  * ## Why this is per wallet, not per app
  *
  * The policy is baked into the Keystore key at generation time, Android does
- * not allow changing a key's auth requirements afterwards. And every wallet
+ * not allow changing a key's auth requirements afterwards, and every wallet
  * has its own key. Two wallets can therefore have different policies, which is
  * also the honest model: a daily-spend wallet and a savings wallet do not
  * deserve the same friction.

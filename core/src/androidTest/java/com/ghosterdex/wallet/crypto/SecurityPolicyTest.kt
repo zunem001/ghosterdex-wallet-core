@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets
  * [SecurityPolicy.NONE] is the one that must be watched: "no authentication"
  * must never quietly become "no encryption". These tests prove a NONE vault
  * still round-trips through a real Keystore key, still fails on tamper, and
- * still dies with [SecureVault.clear]. Everything except the prompt.
+ * still dies with [SecureVault.clear], everything except the prompt.
  *
  * The BIOMETRIC path is covered end-to-end by [BiometricRoundTripTest]; the
  * CREDENTIAL prompt path needs a device credential set and is exercised

@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets
 /**
  * SLIP-0010 hierarchical key derivation for Ed25519.
  *
- * Ed25519 supports **hardened derivation only**. There is no public parent to
+ * Ed25519 supports **hardened derivation only**, there is no public parent to
  * public child step, because the curve's scalar clamping breaks the additive
  * relationship that makes non-hardened derivation work on secp256k1. Every
  * index here therefore has the hardened bit set, and a caller asking for a
@@ -27,7 +27,7 @@ object Slip10 {
      * phrase generated here restores in those wallets and vice versa. Changing
      * it would strand every existing user's funds behind this app.
      *
-     * (Note that Ledger uses m/44'/397'/0'/0'/1'. A different path, and a
+     * (Note that Ledger uses m/44'/397'/0'/0'/1', a different path, and a
      * known source of "my phrase doesn't work" confusion across the ecosystem.)
      */
     val NEAR_PATH = intArrayOf(44 or HARDENED, 397 or HARDENED, 0 or HARDENED)

@@ -6,25 +6,25 @@ import android.content.Context
  * Chain-agnostic recovery-phrase handling.
  *
  * GhosterDex presents one wallet. A user pasting a phrase should never be asked
- * which ecosystem it came from, and should never be told. So this reports what
+ * which ecosystem it came from, and should never be told, so this reports what
  * a phrase *is* without leaking that into the UI's vocabulary.
  *
  * ## Validation is evidence, not permission
  *
  * Neither derivation function needs a phrase to validate. [TonMnemonic.toPrivateKey]
- * and [Bip39.toSeed] are total on arbitrary text. They never consult the
+ * and [Bip39.toSeed] are total on arbitrary text, they never consult the
  * wordlist. A phrase always yields a key.
  *
  * So the checks here answer only "is this the phrase the user thinks it is?".
  * They are a typo detector with a **1-in-256 false-accept rate on each side**,
  * which is far too weak to be the last line of defence. The real backstop is
- * showing the user an address and a balance they recognise. See SECURITY.md.
+ * showing the user an address and a balance they recognise, see SECURITY.md.
  *
  * ## Word counts
  *
  * BIP39 allows 12/15/18/21/24. TON only ever defines 24. A 12-word phrase from
  * a mainstream wallet is therefore perfectly importable even though it can
- * never satisfy TON's check. Which is why word count and scheme are reported
+ * never satisfy TON's check, which is why word count and scheme are reported
  * separately rather than collapsed into one "valid" flag.
  */
 object RecoveryPhrase {
@@ -42,11 +42,11 @@ object RecoveryPhrase {
      *
      * ## Why this costs nothing extra
      *
-     * The obvious approach. Draw 24 random words, test both predicates -
+     * The obvious approach, draw 24 random words, test both predicates,
      * needs 2⁻¹⁶, or ~65,536 attempts. **256× more expensive than today.**
      *
      * Instead, entropy is drawn and encoded with [Bip39.fromEntropy], which
-     * makes the BIP39 checksum correct *by construction*. It is computed, not
+     * makes the BIP39 checksum correct *by construction*, it is computed, not
      * guessed. Only TON's seed-version predicate is then searched, at 2⁻⁸. So
      * the expected work is ~256 attempts, the same as the TON-only generator
      * this replaces, for a phrase that is valid in both ecosystems.
@@ -54,7 +54,7 @@ object RecoveryPhrase {
      * ## Entropy is not weakened
      *
      * This samples uniformly from the ~1/256 of 256-bit entropy values whose
-     * derived TON entropy begins with a zero byte. Roughly 2²⁴⁸ candidates
+     * derived TON entropy begins with a zero byte, roughly 2²⁴⁸ candidates
      * remain. The constraint is a public property of a PRF output, not
      * structure an attacker can exploit.
      *
@@ -62,15 +62,19 @@ object RecoveryPhrase {
      */
     fun generate(context: Context): CharArray {
         val random = java.security.SecureRandom()
+        // A degraded entropy source produces output that still looks correct,
+        // so it is tested before any seed is drawn rather than trusted, and
+        // every draw is mixed across independent sources. See Entropy.kt.
+        Entropy.assertHealthy(context, random)
         val entropy = ByteArray(32) // 32 bytes -> 24 words
 
         try {
             // Generous bound. At p = 1/256 per attempt the chance of reaching
             // this is astronomically small, so hitting it means the RNG is
-            // broken. Which must fail loudly, never silently return a weak
+            // broken, which must fail loudly, never silently return a weak
             // phrase.
             repeat(MAX_GENERATION_ATTEMPTS) {
-                random.nextBytes(entropy)
+                Entropy.strengthened(random, entropy)
                 val candidate = Bip39.fromEntropy(context, entropy)
                 if (TonMnemonic.satisfiesSeedVersion(candidate)) {
                     return candidate
@@ -103,7 +107,7 @@ object RecoveryPhrase {
         /**
          * We have positive evidence this phrase is intact.
          *
-         * Not the same as "usable". An unrecognised phrase still derives keys
+         * Not the same as "usable", an unrecognised phrase still derives keys
          * perfectly well. It means we have no evidence the user typed it right.
          */
         val recognised: Boolean get() = tonValid || bip39Valid

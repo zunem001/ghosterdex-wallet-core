@@ -9,7 +9,7 @@ the key handling and its tests, not the whole application: what is in and out
 of scope is listed in full below, before you read anything else into it.
 
 ```
-83 instrumented tests, run against a real Android Keystore.
+110 instrumented tests, run against a real Android Keystore.
 ```
 
 ---
@@ -34,6 +34,10 @@ demonstrate otherwise. Clone it, read it, run them.
 | `SecureVault` | Keystore sealing, the app-lock policies, key rotation |
 | `TonProofSigner`, `TonConnectSigner` | the two signature envelopes |
 | `TonCell`, `Base58`, `WalletKey` | address formats and serialisation |
+| `TonAddress`, `TonBase64` | address forms and their encodings |
+| `TonTransfer`, `TonBoc`, `TonSlice` | building, signing and reading the messages that move Gram and jettons |
+| `Entropy` | health checks and mixing for the randomness behind a phrase |
+| `AppLock` | the app's own passcode gate, separate from the vault |
 | `Secrets` | wiping key material from memory |
 | `WalletRegistry`, `WalletMeta` | which wallet is which, and whether it is backed up |
 
@@ -69,6 +73,11 @@ Nothing else to configure. What runs:
 - **`HardeningTest`** covers the refusals: tampered ciphertext, a wrong key, a
   reused slot.
 - **`SecurityPolicyTest`** covers the three lock choices.
+- **`TonSendVectorsTest`** checks every message the app can sign, byte for
+  byte, against `@ton/core` and `@ton/ton`, so a transfer is the one the
+  network expects rather than one that is merely self-consistent.
+- **`WalletDiscoveryTest`** covers import's contract-version probing and the
+  cases where the result is inconclusive.
 - **`BiometricRoundTripTest`** seals and unseals through a
   CryptoObject-bound `BiometricPrompt`. It **skips** unless the device has an
   enrolled fingerprint and something is feeding the sensor, so a green run on a

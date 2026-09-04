@@ -1,7 +1,7 @@
 package com.ghosterdex.wallet.crypto
 
 /**
- * Base58 (Bitcoin alphabet). The encoding NEAR uses for public keys.
+ * Base58 (Bitcoin alphabet), the encoding NEAR uses for public keys.
  *
  * The alphabet deliberately omits 0, O, I and l so a key read aloud or copied
  * by hand cannot land on a different valid key.

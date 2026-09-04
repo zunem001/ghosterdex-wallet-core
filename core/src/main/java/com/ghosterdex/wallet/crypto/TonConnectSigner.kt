@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets
  * Produces TON Connect `signData` signatures over text.
  *
  * This is the exact authorisation GhosterDex's Worker checks. The wire format
- * must match `verifyWalletSig` byte for byte. Any drift and the server returns
+ * must match `verifyWalletSig` byte for byte, any drift and the server returns
  * "Wallet signature is invalid", with no clue which field diverged.
  *
  * Preimage (all integers big-endian):
@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets
  *   || uint64(timestamp)
  *   || "txt" || uint32(len(text)) || text
  * ```
- * The Ed25519 signature is over `sha256(preimage)`. The digest is the message
+ * The Ed25519 signature is over `sha256(preimage)`, the digest is the message
  * handed to Ed25519, not the preimage itself.
  */
 object TonConnectSigner {

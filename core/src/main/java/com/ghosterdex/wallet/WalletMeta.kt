@@ -21,7 +21,7 @@ import android.content.Context
  *
  * Backup state belongs to a phrase, and every wallet has its own. A single
  * shared flag would mark a freshly added wallet as backed up because a
- * *different* one had been. And the whole point of the flag is that removing
+ * *different* one had been, and the whole point of the flag is that removing
  * a wallet can warn honestly about what is about to be destroyed.
  */
 object WalletMeta {
@@ -56,7 +56,7 @@ object WalletMeta {
      *
      * An **imported** one is the opposite case, and used to be handled as if it
      * were the same. The user just typed that phrase in from whatever they keep
-     * it on. A stronger demonstration than the verify quiz, which asks for
+     * it on, a stronger demonstration than the verify quiz, which asks for
      * three words chosen from a list shown seconds earlier. Calling that "not
      * backed up" told someone who had *just proved* they held the phrase that
      * they were about to lose it, and backing it up again could not clear the
@@ -70,7 +70,7 @@ object WalletMeta {
         if (created) clear(context, slot) else markBackedUp(context, slot)
     }
 
-    /** Cleared with the wallet. A new wallet has a new, unproven phrase. */
+    /** Cleared with the wallet, a new wallet has a new, unproven phrase. */
     fun clear(context: Context, slot: String = WalletRegistry.activeSlot(context)) {
         prefs(context).edit().remove(key(slot)).apply()
     }

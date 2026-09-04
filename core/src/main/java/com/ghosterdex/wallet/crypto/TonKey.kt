@@ -6,16 +6,20 @@ import java.io.Closeable
 import java.util.Locale
 
 /**
- * A TON wallet key. The key that actually authorises GhosterDex transactions.
+ * A TON wallet key, the key that actually authorises GhosterDex transactions.
  *
  * The Worker verifies every `/api/execute` against the bound TON wallet's
  * ed25519 public key, so this is the identity the whole flow hangs off. The
  * NEAR key in [NearKey] is a separate thing and does not sign these.
  *
- * Address derivation targets **wallet v4R2**, matching `WalletContractV4` -
- * what the mini app's own relay uses and what Tonkeeper produces by default.
- * Changing the wallet version changes the address for the same key, which would
- * strand funds, so the version is pinned rather than negotiated.
+ * The version this key derives under is chosen per wallet and stored with
+ * it, never compiled in. A NEW wallet takes [TonWalletVersion.DEFAULT], which
+ * is W5; an IMPORTED one takes whichever version the chain says already holds
+ * funds, which [WalletDiscovery] establishes by probing every candidate.
+ *
+ * The same key lands at a different address under each version, so that
+ * stored value is load-bearing for the life of the wallet: it cannot be
+ * changed afterwards without moving the funds on chain to a new account.
  */
 class TonKey private constructor(
     private val params: Ed25519PrivateKeyParameters,
@@ -26,14 +30,14 @@ class TonKey private constructor(
     val derivation: TonDerivation,
 ) : Closeable {
 
-    /** Raw 32-byte Ed25519 public key. This is what the Worker stores as `boundWallet.publicKey`. */
+    /** Raw 32-byte Ed25519 public key, this is what the Worker stores as `boundWallet.publicKey`. */
     val publicKeyBytes: ByteArray = params.generatePublicKey().encoded
 
     val publicKeyHex: String
         get() = publicKeyBytes.joinToString("") { String.format(Locale.ROOT, "%02x", it) }
 
     /**
-     * Raw-form address, `0:<64 hex>`. The form the Worker compares against.
+     * Raw-form address, `0:<64 hex>`, the form the Worker compares against.
      *
      * Uses [version], which is fixed when the key is constructed and stored
      * alongside the wallet. It must never be inferred from a compiled-in
@@ -72,17 +76,10 @@ class TonKey private constructor(
      * `sha256(repr(StateInit{ code, data }))`.
      *
      * StateInit here is five bits, `split_depth:0`, `special:0`, `code:1`,
-     * `data:1`, `library:0`. With the code and data cells as refs.
+     * `data:1`, `library:0`, with the code and data cells as refs.
      */
-    private fun stateInitHash(target: TonWalletVersion): ByteArray {
-        val dataRef = target.dataCell(publicKeyBytes)
-        val codeRef = TonCell.Ref(hexToBytes(target.codeHash), target.codeDepth)
-
-        // StateInit: split_depth 0, special 0, code 1, data 1, library 0 -
-        // 0b00110 in the high bits of a single byte, with two refs.
-        val stateInitBits = byteArrayOf(0b00110_000.toByte())
-        return TonCell.hash(stateInitBits, 5, listOf(codeRef, dataRef)).hash
-    }
+    private fun stateInitHash(target: TonWalletVersion): ByteArray =
+        target.stateInit(publicKeyBytes).hash
 
     companion object {
         private const val WORKCHAIN = 0
@@ -112,7 +109,7 @@ class TonKey private constructor(
          * Native derivation without a Context.
          *
          * TON's own scheme needs no wordlist, so it can run where a Context is
-         * awkward. Tests, and the signing path. [TonDerivation.BIP44] cannot,
+         * awkward, tests, and the signing path. [TonDerivation.BIP44] cannot,
          * because BIP39 seed derivation is reached through [Bip39].
          */
         fun fromMnemonicNative(
@@ -135,10 +132,6 @@ class TonKey private constructor(
             require(scalar.size == 32) { "TON private scalar must be 32 bytes" }
             val copy = scalar.copyOf()
             return TonKey(Ed25519PrivateKeyParameters(copy, 0), copy, version, derivation)
-        }
-
-        private fun hexToBytes(s: String) = ByteArray(s.length / 2) {
-            ((Character.digit(s[it * 2], 16) shl 4) or Character.digit(s[it * 2 + 1], 16)).toByte()
         }
     }
 }

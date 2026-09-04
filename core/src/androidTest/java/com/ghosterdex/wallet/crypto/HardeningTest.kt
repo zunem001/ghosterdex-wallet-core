@@ -113,7 +113,7 @@ class HardeningTest {
     fun signaturesAreDeterministic() {
         // Ed25519 is deterministic by construction. If this ever varied it
         // would mean nonce material was being drawn from somewhere it should
-        // not be. The failure mode that has leaked keys in ECDSA wallets.
+        // not be, the failure mode that has leaked keys in ECDSA wallets.
         TonKey.fromMnemonicNative(phrase.toCharArray()).use { key ->
             val a = key.sign("payload".toByteArray())
             val b = key.sign("payload".toByteArray())
@@ -151,7 +151,7 @@ class HardeningTest {
     @Test
     fun tonCellRejectsOverlongInput() {
         // A cell holds at most 1023 bits and 4 refs. Silently truncating would
-        // produce a valid-looking hash for the wrong data. I.e. a wrong address.
+        // produce a valid-looking hash for the wrong data, i.e. a wrong address.
         try {
             TonCell.hash(ByteArray(200), 1600)
             throw AssertionError("accepted an over-long cell")
@@ -180,7 +180,7 @@ class HardeningTest {
 
     // ── Multi-length and cross-ecosystem import ──────────────────────────────
 
-    /** The canonical BIP39 12-word vector. What a MetaMask user would paste. */
+    /** The canonical BIP39 12-word vector, what a MetaMask user would paste. */
     private val twelveWord =
         "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 
@@ -257,7 +257,7 @@ class HardeningTest {
     @Test
     fun derivationFamiliesProduceDifferentKeys() {
         // A wrong contract version is the same key at another address. A wrong
-        // *family* is a different key entirely. So a Ledger or FoxWallet
+        // *family* is a different key entirely, so a Ledger or FoxWallet
         // user importing here would see an empty wallet if only TON's native
         // scheme were tried. Both must be probed.
         val native = TonKey.fromMnemonic(
@@ -271,7 +271,7 @@ class HardeningTest {
         assertNotEquals("families must not collide on the public key", native.first, bip44.first)
         assertNotEquals("families must not collide on the address", native.second, bip44.second)
 
-        // Native must still match the pinned vector. Adding BIP44 cannot be
+        // Native must still match the pinned vector, adding BIP44 cannot be
         // allowed to disturb existing wallets.
         assertEquals(expectedScalar, hex(TonMnemonic.toPrivateKey(phrase.toCharArray())))
     }
@@ -329,7 +329,7 @@ class HardeningTest {
     fun generatedPhrasesAreValidInBothEcosystems() {
         // The property that keeps a user's exit door open. A phrase valid under
         // only one scheme is refused by the other's import screen 255 times out
-        // of 256. The wallet would hold their keys hostage to this app.
+        // of 256, the wallet would hold their keys hostage to this app.
         val generated = RecoveryPhrase.generate(context)
         try {
             val check = RecoveryPhrase.check(context, generated)

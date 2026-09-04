@@ -18,7 +18,7 @@ import javax.crypto.spec.GCMParameterSpec
  * Encrypted-at-rest storage for the recovery phrase.
  *
  * The phrase is sealed under an AES-256-GCM key that lives in the Android
- * Keystore. Hardware-backed, and in StrongBox on devices that have a secure
+ * Keystore, hardware-backed, and in StrongBox on devices that have a secure
  * element. The key material itself is never readable by this process; we can
  * only ask the Keystore to perform operations with it.
  *
@@ -26,7 +26,7 @@ import javax.crypto.spec.GCMParameterSpec
  *
  * The stored secret is the 24-word TON recovery phrase, not the Ed25519 scalar.
  * That costs a PBKDF2 pass on every unlock, 100,000 rounds, since TON's
- * derivation is not BIP39's. And buys two things: the backup screen can show
+ * derivation is not BIP39's, and buys two things: the backup screen can show
  * the user their actual phrase, and new key types can be derived from the same
  * root later, which is what adding NEAR ML-DSA-65 will need, since that key has
  * to come from the same root to avoid a second thing to back up.
@@ -55,7 +55,7 @@ class SecureVault(
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     /**
-     * Storage keys, suffixed per slot. Except the first.
+     * Storage keys, suffixed per slot, except the first.
      *
      * Slot [WalletRegistry.LEGACY_SLOT] keeps the exact unsuffixed keys and
      * Keystore alias the single-wallet build wrote. An existing wallet is
@@ -70,7 +70,7 @@ class SecureVault(
      * Which generation of this slot's Keystore key is in force.
      *
      * Android bakes a key's auth requirements in at generation and will not
-     * change them. But the *vault* is not the key. Changing a wallet's lock
+     * change them, but the *vault* is not the key. Changing a wallet's lock
      * re-seals the same phrase under a **new** key, and this counter is what
      * makes that swap survivable: the new key is built at generation n+1 while
      * generation n keeps guarding the live blob, and a single preferences
@@ -78,7 +78,7 @@ class SecureVault(
      * and the old key and old blob are still exactly where they were.
      *
      * Absent for every wallet sealed before re-keying existed, which is
-     * generation 0. The unsuffixed alias those wallets already use.
+     * generation 0, the unsuffixed alias those wallets already use.
      */
     private fun generation(): Int = prefs.getInt(key(KEY_KEY_GEN), 0)
 
@@ -111,7 +111,7 @@ class SecureVault(
      *
      * Stored, never inferred. The address is a hash of the deployed code, so a
      * release that changed [TonWalletVersion.DEFAULT] would otherwise silently
-     * relocate every existing wallet. The app would show a different, empty
+     * relocate every existing wallet, the app would show a different, empty
      * address and the user's funds would appear to have vanished.
      *
      * Wallets created before this was recorded predate the V5R1 default and
@@ -151,7 +151,7 @@ class SecureVault(
 
     /**
      * How this wallet's key is gated. Absent for pre-policy wallets, which
-     * were all biometric. See [SecurityPolicy.from].
+     * were all biometric, see [SecurityPolicy.from].
      */
     fun securityPolicy(): SecurityPolicy =
         SecurityPolicy.from(prefs.getString(key(KEY_POLICY), null))
@@ -171,7 +171,7 @@ class SecureVault(
     /**
      * True when the vault key exists but the OS has invalidated it.
      *
-     * Happens when biometric enrolment changes. A new fingerprint or face
+     * Happens when biometric enrolment changes, a new fingerprint or face
      * added, or all of them removed. That invalidation is intentional (see
      * [setInvalidatedByBiometricEnrollment] below); the recovery phrase is the
      * way back, which is why the backup step is not optional.
@@ -192,7 +192,7 @@ class SecureVault(
      * be wrapped in a `BiometricPrompt.CryptoObject` and is unusable until the
      * prompt succeeds. Under [SecurityPolicy.NONE] it is usable immediately.
      *
-     * [policy] matters only when this call is the one that generates the key -
+     * [policy] matters only when this call is the one that generates the key,
      * i.e. at wallet creation. An existing key keeps the parameters it was
      * born with, whatever is passed here.
      */
@@ -248,8 +248,8 @@ class SecureVault(
     //
     // A wallet's lock is not permanent, even though its key is. Re-keying
     // decrypts the phrase under the old policy and re-seals it under a brand
-    // new key built to the new one. The wallet is untouched by this. Same
-    // phrase, same derivation, same address. Only the wrapper changes.
+    // new key built to the new one. The wallet is untouched by this, same
+    // phrase, same derivation, same address, only the wrapper changes.
     //
     // ## The ordering is the safety
     //
@@ -261,7 +261,7 @@ class SecureVault(
     //
     // Every step before 4 is reversible by doing nothing, and step 4 is a
     // single atomic preferences write. A crash, a cancelled prompt, a killed
-    // process. The wallet is either fully on the old key or fully on the new
+    // process, the wallet is either fully on the old key or fully on the new
     // one, never in between. Deleting the old key first would open a window
     // where a cancelled biometric prompt destroys the wallet outright.
 
@@ -359,27 +359,52 @@ class SecureVault(
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
             .setKeySize(256)
 
-        // The key is unusable while the screen is locked, whatever the wallet's
-        // own policy says.
-        //
-        // This is the one protection that still applies when the user chose NO
-        // lock: without it, that wallet's key can be used by anything running
-        // on the device at any moment, including while the phone sits locked in
-        // someone else's hand. With it, an attacker needs the device unlocked
-        // first, which is the same bar the rest of the phone sets.
-        //
-        // Safe for every policy here because the vault is only ever opened for
-        // a signature the user is present for. Nothing in this app touches it
-        // from the background: push arrives as a data message and never reads
-        // the vault.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        /* The key is unusable while the screen is locked - but ONLY for a
+         * wallet that has no other lock.
+         *
+         * ## What this protects, and where it is redundant
+         *
+         * With [SecurityPolicy.NONE] this is the single thing standing between
+         * the key and anything else running on the phone: no prompt gates it,
+         * so without this flag the key is usable while the device sits locked
+         * in someone else's hand.
+         *
+         * Under BIOMETRIC or CREDENTIAL it protects nothing that is not
+         * already protected. Those keys demand fresh user authentication for
+         * every single operation, driven from a CryptoObject prompt that only
+         * a foreground app can raise - and an app is not foreground on a
+         * locked phone. The device is necessarily unlocked before the key can
+         * be touched at all.
+         *
+         * ## Why redundant is not free
+         *
+         * This flag is enforced by the TEE, and its "device is unlocked" state
+         * is refreshed by the lock screen. On this project's Galaxy S10 - a
+         * Keymaster 4 HAL wrapped by km_compat rather than a native KeyMint -
+         * that state goes stale, and the key then refuses in ways that surface
+         * as everything except the truth: onboarding shown to an owner who has
+         * a wallet, and "User not authenticated" over a signature nobody was
+         * ever asked to authorise.
+         *
+         * The tell was the owner's own remedy, found before the code knew why
+         * it worked: lock the screen and unlock it, and it starts working. That
+         * is exactly the event that refreshes this flag's state. Wallets that
+         * do not bind their keys to the TEE this way never meet it.
+         *
+         * So it is kept where it is the only guard and dropped where a
+         * per-operation prompt already says more. An existing key keeps the
+         * parameters it was born with; this decides what NEW keys ask for.
+         */
+        if (policy == SecurityPolicy.NONE &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+        ) {
             builder.setUnlockedDeviceRequired(true)
         }
 
         when (policy) {
             SecurityPolicy.BIOMETRIC -> {
                 // Fresh authentication for every use. Not a session, not a
-                // threshold. Per operation.
+                // threshold, per operation.
                 builder.setUserAuthenticationRequired(true)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     // Timeout 0 forces the caller through a CryptoObject-bound
@@ -407,7 +432,7 @@ class SecureVault(
                 builder.setUserAuthenticationRequired(true)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     // Device credential cannot do per-operation (timeout 0)
-                    // CryptoObject auth. The OS requires a validity window.
+                    // CryptoObject auth, the OS requires a validity window.
                     // Five seconds: enough to go from prompt to doFinal, short
                     // enough that the key is locked again before the user has
                     // put the phone down.

@@ -24,7 +24,7 @@ import javax.crypto.Cipher
  * The biometric **success** path, end to end.
  *
  * [SecureVaultTest] proves the vault refuses without authentication. This
- * proves it *works* with it. The half that cannot be tested without an
+ * proves it *works* with it, the half that cannot be tested without an
  * enrolled biometric, and therefore the half that silently goes unverified on
  * a default emulator.
  *
@@ -43,7 +43,7 @@ import javax.crypto.Cipher
  * while ($true) { adb emu finger touch 1; Start-Sleep -Milliseconds 500 }
  * ```
  *
- * Without an enrolment the test skips via [assumeTrue] rather than failing -
+ * Without an enrolment the test skips via [assumeTrue] rather than failing,
  * a green run on a bare emulator must not be mistaken for coverage.
  */
 @RunWith(AndroidJUnit4::class)
@@ -52,7 +52,7 @@ class BiometricRoundTripTest {
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
     private lateinit var vault: SecureVault
 
-    /** From TonVectorsTest. Same phrase, so the expected address is known. */
+    /** From TonVectorsTest, same phrase, so the expected address is known. */
     private val phrase =
         "soda ripple wire snap lift castle balance train short machine another mystery " +
             "buzz side pact random west loop fat mesh hollow purpose replace excuse"
@@ -65,7 +65,7 @@ class BiometricRoundTripTest {
 
     @Before
     fun setUp() {
-        assumeTrue("No STRONG biometric enrolled. Skipping success-path test", biometricsAvailable())
+        assumeTrue("No STRONG biometric enrolled, skipping success-path test", biometricsAvailable())
         vault = SecureVault(context)
         vault.clear()
     }
@@ -78,8 +78,8 @@ class BiometricRoundTripTest {
     /**
      * Runs one CryptoObject-bound prompt and returns the authenticated Cipher.
      *
-     * Mirrors [com.ghosterdex.wallet.WalletPlugin]'s configuration exactly -
-     * STRONG only, no device credential. So this tests the real policy rather
+     * Mirrors [com.ghosterdex.wallet.WalletPlugin]'s configuration exactly,
+     * STRONG only, no device credential, so this tests the real policy rather
      * than a laxer one that happens to pass.
      */
     private fun authenticate(
@@ -120,7 +120,7 @@ class BiometricRoundTripTest {
         }
 
         assertTrue(
-            "[$label] prompt never resolved. Is something feeding `adb emu finger touch 1`?",
+            "[$label] prompt never resolved, is something feeding `adb emu finger touch 1`?",
             latch.await(60, TimeUnit.SECONDS),
         )
         assertEquals(null, failure)

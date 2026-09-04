@@ -65,7 +65,7 @@ class SecureVaultTest {
     @Test
     fun walletVersionDefaultsToV4R2ForPreExistingInstalls() {
         // Wallets created before the version was recorded predate the V5R1
-        // default, so an absent value must mean V4R2. Not "today's default",
+        // default, so an absent value must mean V4R2, not "today's default",
         // which would silently move their address.
         vault.clear()
         assertEquals(TonWalletVersion.V4R2, vault.walletVersion())
@@ -95,7 +95,7 @@ class SecureVaultTest {
      * `doFinal` with [javax.crypto.IllegalBlockSizeException] wrapping a
      * `KeyStoreException(KEY_USER_NOT_AUTHENTICATED)`; other configurations
      * throw [UserNotAuthenticatedException] at `init`. Asserting on the type
-     * alone would pass for the wrong reason. Or fail while the gate is
+     * alone would pass for the wrong reason, or fail while the gate is
      * working, which is what happened the first time this test ran on an
      * enrolled device.
      */
@@ -121,7 +121,7 @@ class SecureVaultTest {
             try {
                 cipher.doFinal("secret".toByteArray())
                 throw AssertionError(
-                    "Vault encrypted without authentication. The biometric gate is not enforced"
+                    "Vault encrypted without authentication, the biometric gate is not enforced"
                 )
             } catch (e: AssertionError) {
                 throw e
@@ -140,7 +140,7 @@ class SecureVaultTest {
             try {
                 vault.encryptCipher()
                 throw AssertionError(
-                    "Vault created a key with no biometric enrolled. It would not be auth-protected"
+                    "Vault created a key with no biometric enrolled, it would not be auth-protected"
                 )
             } catch (expected: UserNotAuthenticatedException) {
                 // Also correct: some versions surface it this way.

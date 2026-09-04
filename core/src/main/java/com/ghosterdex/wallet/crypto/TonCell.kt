@@ -7,7 +7,7 @@ import org.bouncycastle.crypto.digests.SHA256Digest
  *
  * A TON address *is* `sha256(representation(stateInit cell))`, so computing one
  * means hashing cells exactly the way the network does. This is not a general
- * BOC library. It handles ordinary cells at level 0, which is all the wallet
+ * BOC library, it handles ordinary cells at level 0, which is all the wallet
  * v4R2 state init requires, and deliberately refuses anything else rather than
  * guessing.
  *
@@ -16,7 +16,7 @@ import org.bouncycastle.crypto.digests.SHA256Digest
  * d1 || d2 || augmented data || ref depths (2 bytes BE each) || ref hashes (32 each)
  * ```
  * where `d1 = refCount` for an ordinary level-0 cell, and
- * `d2 = floor(bits/8) + ceil(bits/8)`. An encoding that lets a reader recover
+ * `d2 = floor(bits/8) + ceil(bits/8)`, an encoding that lets a reader recover
  * whether the final byte is partially filled.
  */
 object TonCell {
@@ -71,7 +71,7 @@ object TonCell {
             repr[repr.size - 1] = augmented.toByte()
         }
 
-        // Depths first, then hashes. The order is part of the spec.
+        // Depths first, then hashes, the order is part of the spec.
         for (r in refs) {
             repr.add(((r.depth shr 8) and 0xFF).toByte())
             repr.add((r.depth and 0xFF).toByte())

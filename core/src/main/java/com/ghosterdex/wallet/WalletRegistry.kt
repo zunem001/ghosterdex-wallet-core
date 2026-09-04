@@ -9,7 +9,7 @@ import org.json.JSONObject
  *
  * ## Slots, and why the first one is called "1"
  *
- * Each wallet occupies a *slot*. A short id that names its Keystore alias and
+ * Each wallet occupies a *slot*, a short id that names its Keystore alias and
  * its sealed-blob key (see [com.ghosterdex.wallet.crypto.SecureVault]). Slot
  * [LEGACY_SLOT] deliberately maps to the exact alias and preference keys the
  * single-wallet build used, so an existing wallet is adopted where it already
@@ -20,7 +20,7 @@ import org.json.JSONObject
  *
  * [nextSlot] is a monotonic counter, not `size + 1`. Reusing the id of a
  * removed wallet would point a fresh wallet at a Keystore alias that may still
- * exist, and the new phrase would be sealed under the old wallet's key. Which
+ * exist, and the new phrase would be sealed under the old wallet's key, which
  * decrypts to the wrong thing, or fails, depending on timing.
  *
  * ## Not secret
@@ -107,7 +107,7 @@ object WalletRegistry {
     /**
      * Records a wallet that has been successfully sealed, and activates it.
      *
-     * Re-committing an existing slot keeps its name unless a new one is given -
+     * Re-committing an existing slot keeps its name unless a new one is given,
      * restoring over a wallet must not silently rename it back to "Wallet 3".
      */
     fun commit(context: Context, slot: String, name: String? = null): Record {
@@ -133,7 +133,7 @@ object WalletRegistry {
      *
      * The bridge's own onboarding (`ensureWallet`) seals a phrase without going
      * through the wallet manager, and a wallet that exists in the vault but not
-     * in the registry is invisible. No way to switch to it, rename it or see
+     * in the registry is invisible, no way to switch to it, rename it or see
      * its backup state. This is the hook that keeps the two in step.
      */
     fun ensureRegistered(context: Context, slot: String) {
@@ -160,7 +160,7 @@ object WalletRegistry {
     /**
      * Forgets a wallet.
      *
-     * Only the bookkeeping. The caller must also wipe the sealed phrase and
+     * Only the bookkeeping, the caller must also wipe the sealed phrase and
      * destroy the Keystore key, which is [SecureVault.clear]'s job. Splitting
      * them is deliberate: the vault wipe is the irreversible half and belongs
      * behind its own confirmation.
@@ -225,7 +225,7 @@ object WalletRegistry {
     private fun adoptLegacyIfNeeded(context: Context) {
         if (prefs(context).contains(KEY_LIST)) return
 
-        // Nothing to adopt. And, importantly, nothing is written. Persisting
+        // Nothing to adopt, and, importantly, nothing is written. Persisting
         // an empty list here would set KEY_LIST on a device that has no wallet
         // yet, and this check would never run again: a wallet created moments
         // later by the bridge's own onboarding would then stay permanently

@@ -16,7 +16,7 @@ import java.util.Locale
  * Every expected value here was produced by the mini app's own dependencies
  * (`@ton/crypto`, `@ton/ton`, `tweetnacl`) and by re-implementing the Worker's
  * `verifyWalletSig` preimage exactly. So these do not test that the Kotlin is
- * self-consistent. They test that it agrees with the code already in
+ * self-consistent, they test that it agrees with the code already in
  * production. That is the only property that matters: a wallet that derives a
  * different address, or signs a different preimage, is silently useless.
  */
@@ -35,7 +35,7 @@ class TonVectorsTest {
         "soda ripple wire snap lift castle balance train short machine another mystery " +
             "buzz side pact random west loop fat mesh hollow purpose replace excuse"
 
-    /** Well-formed words, but fails isBasicSeed. MnemonicValidate() returns false. */
+    /** Well-formed words, but fails isBasicSeed, mnemonicValidate() returns false. */
     private val invalidMnemonic =
         "dose ice enrich trigger test dove century still betray gas diet dune " +
             "ready oyster junk symbol lawsuit fine cluster garden bind nut cross hero"
@@ -69,8 +69,8 @@ class TonVectorsTest {
      * Every contract version, against `@ton/ton`.
      *
      * The same key gives three unrelated addresses. Deriving only one means a
-     * user who imports a Tonkeeper wallet. Which has defaulted to V5R1 since
-     * the W5 standard landed in July 2024. Sees an empty balance while their
+     * user who imports a Tonkeeper wallet, which has defaulted to V5R1 since
+     * the W5 standard landed in July 2024, sees an empty balance while their
      * funds sit safely at an address the app never queries.
      */
     @Test
@@ -89,7 +89,7 @@ class TonVectorsTest {
                 "0:1f20f387f972de5891f9b385e88c979a69154bf2b89afb92a8702ed4035f48ab",
                 candidates[TonWalletVersion.V3R2],
             )
-            // Three versions, three distinct addresses. Which is the entire
+            // Three versions, three distinct addresses, which is the entire
             // reason import has to probe rather than assume.
             assertEquals(3, candidates.values.toSet().size)
         }
@@ -172,7 +172,7 @@ class TonVectorsTest {
 
     @Test
     fun tonCell_augmentationChangesHash() {
-        // "5 bits" and "8 bits with three trailing zeros" must not collide -
+        // "5 bits" and "8 bits with three trailing zeros" must not collide,
         // that is exactly what the augmentation bit exists to prevent.
         val a = TonCell.hash(byteArrayOf(0b00110_000.toByte()), 5)
         val b = TonCell.hash(byteArrayOf(0b00110_000.toByte()), 8)
@@ -233,7 +233,7 @@ class TonVectorsTest {
     @Test
     fun tonProof_isADifferentEnvelopeFromSignData() {
         // Same key, same domain, same timestamp, same string. If these ever
-        // matched, one signer would be using the other's envelope. And the
+        // matched, one signer would be using the other's envelope, and the
         // server would reject every login or every transaction.
         TonKey.fromMnemonicNative(validMnemonic.toCharArray(), version = TonWalletVersion.V4R2).use { key ->
             val text = "ghoster-challenge-abc123"

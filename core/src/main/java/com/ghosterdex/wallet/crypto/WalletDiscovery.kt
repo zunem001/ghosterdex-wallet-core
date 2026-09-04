@@ -10,7 +10,7 @@ import java.net.URL
  * ## Why this exists
  *
  * One phrase yields one key, but that key has a different address under every
- * wallet contract version. See [TonWalletVersion]. Guessing wrong shows a
+ * wallet contract version, see [TonWalletVersion]. Guessing wrong shows a
  * funded user an empty wallet, and the phrase-level checks cannot help: they
  * are typo detection with a 1-in-256 false-accept rate, so a phrase that passes
  * them can still be the wrong phrase.
@@ -19,7 +19,7 @@ import java.net.URL
  * **set**, asks which ones have history, and lets the user recognise their own
  * balance. Recognition, not assertion.
  *
- * ## Privacy cost. Read before enabling this anywhere else
+ * ## Privacy cost, read before enabling this anywhere else
  *
  * This is the app's **only** third-party network call. Everything else it does
  * goes to bundled assets or ghosterdex.com. Probing necessarily discloses the
@@ -43,7 +43,7 @@ object WalletDiscovery {
     /** Public TON indexer. Rate-limited without a key, which is fine for import. */
     private const val ENDPOINT = "https://toncenter.com/api/v2/getAddressInformation"
 
-    /** GhosterDex's own catalogue. Not a third party. */
+    /** GhosterDex's own catalogue, not a third party. */
     private const val TOKENS_ENDPOINT = "https://ghosterdex.com/api/tokens"
 
     private const val TIMEOUT_MS = 6000
@@ -90,7 +90,7 @@ object WalletDiscovery {
      * public endpoint, where being throttled would produce [Outcome.Unavailable]
      * and force the user to guess. Import can afford a couple of seconds.
      *
-     * Never throws. A failure for one candidate is reported, not propagated,
+     * Never throws, a failure for one candidate is reported, not propagated,
      * so one bad response cannot hide the others.
      */
     fun probe(candidates: List<Candidate>): List<Outcome> =
@@ -123,8 +123,8 @@ object WalletDiscovery {
 
             val balance = result.optString("balance", "0").toLongOrNull() ?: 0L
             // "uninitialized" means the contract was never deployed. It can
-            // still hold a balance. Someone may have sent funds to an address
-            // whose wallet has not been used yet. So balance is checked too.
+            // still hold a balance, someone may have sent funds to an address
+            // whose wallet has not been used yet, so balance is checked too.
             val deployed = result.optString("state", "uninitialized") == "active"
 
             if (deployed || balance > 0L) {
@@ -145,7 +145,7 @@ object WalletDiscovery {
      * Deliberately sourced from `ghosterdex.com/api/tokens` rather than a price
      * oracle: it is a origin the app already talks to, so this adds no new
      * third-party dependency, and it is the same number the rest of the app
-     * shows. A chooser quoting a different price to the portfolio would look
+     * shows, a chooser quoting a different price to the portfolio would look
      * like a bug.
      *
      * The lookup mirrors the fallback chain the Worker itself uses, because the
@@ -191,7 +191,7 @@ object WalletDiscovery {
     /**
      * The candidate to adopt, or null when the user must decide.
      *
-     * Returns a version only when exactly one candidate is active. Anything
+     * Returns a version only when exactly one candidate is active, anything
      * else is genuinely ambiguous and must go to the user rather than be
      * guessed. Two funded addresses from one phrase is unusual but entirely
      * possible for someone who has used the same phrase in two wallets.
@@ -199,7 +199,27 @@ object WalletDiscovery {
     fun unambiguousChoice(outcomes: List<Outcome>): Outcome.Active? =
         outcomes.filterIsInstance<Outcome.Active>().singleOrNull()
 
-    /** True when nothing could be checked. The UI must not call this "empty". */
+    /** True when nothing could be checked, the UI must not call this "empty". */
     fun allUnavailable(outcomes: List<Outcome>): Boolean =
         outcomes.isNotEmpty() && outcomes.all { it is Outcome.Unavailable }
+
+    /**
+     * True when "this phrase has no wallet yet" is not a conclusion the probe
+     * can support.
+     *
+     * [allUnavailable] is the stricter condition and it is NOT the one that
+     * matters. A single candidate answering "empty" while the others time out
+     * still leaves the version unknown, and a caller that reads it as a new
+     * wallet derives a real, correct, EMPTY address and stores it forever.
+     * The funds then sit at a version the app will never look at again, which
+     * reads to their owner as money having vanished.
+     *
+     * So the only safe reading of "new wallet" is that every candidate was
+     * reached and every one of them came back empty. An empty list is not
+     * that: nothing was asked, which is the one case where the answer should
+     * cost nothing to get wrong and so may as well fail closed.
+     */
+    fun inconclusive(outcomes: List<Outcome>): Boolean =
+        outcomes.isEmpty() ||
+            (outcomes.none { it is Outcome.Active } && outcomes.any { it is Outcome.Unavailable })
 }

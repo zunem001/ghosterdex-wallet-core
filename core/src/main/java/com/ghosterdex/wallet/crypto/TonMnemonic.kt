@@ -66,18 +66,20 @@ object TonMnemonic {
      * Generates a valid 24-word TON mnemonic.
      *
      * Loops until the derived entropy satisfies [isBasicSeed] and does not look
-     * password-protected. Exactly `mnemonicNew` in `@ton/crypto`. Expected
+     * password-protected, exactly `mnemonicNew` in `@ton/crypto`. Expected
      * iterations are small (the check passes roughly 1 in 256), but each one
      * costs a 390-round PBKDF2, so this is not instant.
      */
     fun generate(context: Context, password: CharArray = CharArray(0)): CharArray {
         val list = words(context)
         val random = SecureRandom()
+        // Any code that mints words from randomness goes through the same gate.
+        Entropy.assertHealthy(context, random)
 
         while (true) {
             val picked = ArrayList<String>(WORD_COUNT)
             repeat(WORD_COUNT) {
-                // nextInt over the full range, not a modulo of nextBytes. Modulo
+                // nextInt over the full range, not a modulo of nextBytes, modulo
                 // on 2048 would be uniform here, but relying on that is the kind
                 // of shortcut that breaks silently if the count ever changes.
                 picked.add(list[random.nextInt(list.size)])
@@ -106,7 +108,7 @@ object TonMnemonic {
      *
      * With no word checksum to lean on, this checks membership, length and the
      * seed-version property. A single mistyped word will almost always fail
-     * [isBasicSeed]. But not certainly, so this is weaker evidence than a BIP39
+     * [isBasicSeed], but not certainly, so this is weaker evidence than a BIP39
      * checksum and the UI should still show the derived address for the user to
      * recognise before funds are sent.
      */
@@ -119,7 +121,7 @@ object TonMnemonic {
             for (r in ranges) {
                 // Membership needs a String for the hash lookup. Individual
                 // words are far less revealing than the ordered phrase, which
-                // stays in char arrays throughout. See Secrets.
+                // stays in char arrays throughout, see Secrets.
                 val word = String(normalized, r.first, r.last - r.first + 1)
                 if (word !in list) return false
             }
@@ -140,7 +142,7 @@ object TonMnemonic {
      * Restore is where users lose funds to typos. "Invalid recovery phrase" is
      * useless when you have 24 words and one is wrong; naming the offenders
      * turns an unrecoverable dead end into a two-second fix. Only reports
-     * membership failures. A phrase whose words are all real but whose order
+     * membership failures, a phrase whose words are all real but whose order
      * is wrong cannot be localised this way, and is reported separately.
      */
     fun unknownWords(context: Context, mnemonic: CharArray): List<String> {

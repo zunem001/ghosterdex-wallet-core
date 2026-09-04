@@ -32,7 +32,7 @@ enum class SignatureScheme(val id: String) {
  * `use { }` block so an exception cannot leave key material resident.
  *
  * This type never escapes Kotlin. The Capacitor bridge exposes verbs
- * ("sign this") and returns results. Never an instance of this class, and
+ * ("sign this") and returns results, never an instance of this class, and
  * never its bytes.
  */
 class NearKey private constructor(
@@ -47,7 +47,7 @@ class NearKey private constructor(
     val publicKey: String get() = "${SignatureScheme.ED25519.id}:${Base58.encode(publicKeyBytes)}"
 
     /**
-     * The NEAR implicit account id. The lowercase hex of the public key.
+     * The NEAR implicit account id, the lowercase hex of the public key.
      *
      * Note that ML-DSA-65 keys have **no implicit-account form**, so a
      * post-quantum key can never be the account's origin; it has to be added to
@@ -73,7 +73,7 @@ class NearKey private constructor(
         /**
          * Derives the wallet key from a BIP39 seed.
          *
-         * The caller still owns [seed] and must wipe it. This does not consume
+         * The caller still owns [seed] and must wipe it, this does not consume
          * it, because an import flow may need it for more than one derivation.
          */
         fun fromSeed(seed: ByteArray, path: IntArray = Slip10.NEAR_PATH): NearKey {

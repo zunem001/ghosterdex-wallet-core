@@ -14,7 +14,7 @@ import java.util.Locale
  * Known-answer tests for the key derivation path.
  *
  * These are the tests that matter most in the whole project. A subtly wrong
- * derivation does not crash. It silently produces a *different, valid* wallet.
+ * derivation does not crash, it silently produces a *different, valid* wallet.
  * The user backs up a phrase, restores it elsewhere, and finds an empty
  * account, with no way to tell which side was wrong. Published vectors are the
  * only defence.
@@ -70,7 +70,7 @@ class CryptoVectorsTest {
             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
         assertTrue(Bip39.validate(context, good.toCharArray()))
 
-        // Last word carries the checksum. Swapping it must fail, not silently
+        // Last word carries the checksum, swapping it must fail, not silently
         // derive a different wallet.
         val badChecksum = good.replace("about", "abandon")
         assertFalse(Bip39.validate(context, badChecksum.toCharArray()))
