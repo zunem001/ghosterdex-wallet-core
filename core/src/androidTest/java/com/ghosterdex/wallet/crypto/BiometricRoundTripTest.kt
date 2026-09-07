@@ -6,7 +6,7 @@ import androidx.core.content.ContextCompat
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.ghosterdex.wallet.TestHostActivity
+import com.ghosterdex.wallet.MainActivity
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -43,7 +43,7 @@ import javax.crypto.Cipher
  * while ($true) { adb emu finger touch 1; Start-Sleep -Milliseconds 500 }
  * ```
  *
- * Without an enrolment the test skips via [assumeTrue] rather than failing,
+ * Without an enrolment the test skips via [assumeTrue] rather than failing ,
  * a green run on a bare emulator must not be mistaken for coverage.
  */
 @RunWith(AndroidJUnit4::class)
@@ -78,12 +78,12 @@ class BiometricRoundTripTest {
     /**
      * Runs one CryptoObject-bound prompt and returns the authenticated Cipher.
      *
-     * Mirrors [com.ghosterdex.wallet.WalletPlugin]'s configuration exactly,
+     * Mirrors [com.ghosterdex.wallet.WalletPlugin]'s configuration exactly ,
      * STRONG only, no device credential, so this tests the real policy rather
      * than a laxer one that happens to pass.
      */
     private fun authenticate(
-        scenario: ActivityScenario<TestHostActivity>,
+        scenario: ActivityScenario<MainActivity>,
         cipher: Cipher,
         label: String,
     ): Cipher {
@@ -130,7 +130,7 @@ class BiometricRoundTripTest {
 
     @Test
     fun fingerprintUnlocksVaultAndDerivesTheRightWallet() {
-        val scenario = ActivityScenario.launch(TestHostActivity::class.java)
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
         scenario.use {
             // ── seal ─────────────────────────────────────────────────────────
             val phraseBytes = phrase.toByteArray(StandardCharsets.UTF_8)

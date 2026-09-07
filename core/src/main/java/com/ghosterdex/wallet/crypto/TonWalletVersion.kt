@@ -185,7 +185,7 @@ enum class TonWalletVersion(
     /**
      * This version's compiled contract.
      *
-     * Parsed from the bundled bag of cells, then checked against [codeHash],
+     * Parsed from the bundled bag of cells, then checked against [codeHash] ,
      * the constant that address derivation has always used and that the vector
      * tests pin. So a corrupted or mistyped BOC fails here, loudly, instead of
      * quietly relocating every wallet of this version to an address nobody

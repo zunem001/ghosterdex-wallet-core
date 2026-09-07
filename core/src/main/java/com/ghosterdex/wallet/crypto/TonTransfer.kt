@@ -15,8 +15,8 @@ import java.math.BigInteger
  *     transfer body       op 0x0f8a7ea5: amount, recipient, change address
  * ```
  *
- * The user does not hold jettons directly. Each holder has a per-token contract,
- * their "jetton wallet", and a transfer is an instruction sent *to that
+ * The user does not hold jettons directly. Each holder has a per-token contract
+ *, their "jetton wallet", and a transfer is an instruction sent *to that
  * contract*, which then talks to the recipient's. So the TON attached to the
  * internal message is not the amount being sent; it is the fuel for that
  * conversation, and whatever is not burned comes back to `responseTo`.
@@ -49,6 +49,18 @@ object TonTransfer {
 
     private const val OP_SEND_MSG = 0x0ec3c86dL
     private const val OP_V5_SIGNED_EXTERNAL = 0x7369676eL
+
+    /**
+     * Wallet v5's opcode for a signed body that arrives as an INTERNAL message.
+     *
+     * The same request the wallet accepts from the outside world, delivered
+     * by another account: that is how a relayer pays for a transfer. It sends
+     * the wallet's own signed body from its own balance, with the Gram
+     * attached, and the wallet acts on it as if the owner had sent it. Only
+     * v5 reads it; the older contracts have no notion of a signed internal
+     * message, so [signedBodyMany] refuses to produce one for them.
+     */
+    private const val OP_V5_SIGNED_INTERNAL = 0x73696e74L
 
     /**
      * A text comment cell.
@@ -296,17 +308,23 @@ object TonTransfer {
      * out; v4 and v3 store up to four (mode, reference) pairs in order. Four
      * is the ceiling everywhere: it is what TON Connect allows a dApp to
      * ask for, and what the older wallets can carry at all.
+     *
+     * [internalAuth] signs the body for another account to deliver, which is
+     * what a relayer does when it pays for a transfer. The layout is the
+     * external one with a different opcode, and only v5 has it.
      */
     fun signedBodyMany(
         key: TonKey,
         seqno: Int,
         validUntil: Long,
         messages: List<Outgoing>,
+        internalAuth: Boolean = false,
     ): TonBoc.Cell {
         require(messages.isNotEmpty()) { "nothing to sign" }
         require(messages.size <= 4) { "a transfer carries at most four messages" }
         require(seqno >= 0) { "seqno cannot be negative" }
         require(validUntil > 0) { "a transfer needs an expiry" }
+        require(!internalAuth || key.version == TonWalletVersion.V5R1) { "only wallet v5 accepts a signed internal message" }
         for (m in messages) require(m.sendMode in 0..255) { "send mode out of range: ${m.sendMode}" }
 
         return when (key.version) {
@@ -321,7 +339,7 @@ object TonTransfer {
                         .endCell()
                 }
                 val signing = TonBoc.Builder()
-                    .storeUint(OP_V5_SIGNED_EXTERNAL, 32)
+                    .storeUint(if (internalAuth) OP_V5_SIGNED_INTERNAL else OP_V5_SIGNED_EXTERNAL, 32)
                     .storeUint(key.version.walletId, 32)
                     .storeUint(validUntil, 32)
                     .storeUint(seqno.toLong(), 32)
@@ -352,16 +370,26 @@ object TonTransfer {
         }
     }
 
-    /** The complete, broadcastable external message for a batch. See [signedTransfer]. */
+    /**
+     * The complete, broadcastable external message for a batch. See [signedTransfer].
+     *
+     * With [internalAuth] the envelope is what a relayer takes in: the same
+     * external shape, addressed to the wallet, whose body the relayer lifts
+     * out and delivers from its own account. A wallet that has never sent
+     * still has no contract on chain, so the envelope carries it exactly as
+     * a first external send does, and the relayer deploys the wallet with
+     * the same message that moves the tokens.
+     */
     fun signedTransferMany(
         key: TonKey,
         address: TonAddress,
         seqno: Int,
         validUntil: Long,
         messages: List<Outgoing>,
+        internalAuth: Boolean = false,
     ): TonBoc.Cell = externalMessage(
         to = address,
-        body = signedBodyMany(key, seqno, validUntil, messages),
+        body = signedBodyMany(key, seqno, validUntil, messages, internalAuth),
         stateInit = if (seqno == 0) key.version.stateInit(key.publicKeyBytes) else null,
     )
 }

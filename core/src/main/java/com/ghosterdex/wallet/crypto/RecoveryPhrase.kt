@@ -42,7 +42,7 @@ object RecoveryPhrase {
      *
      * ## Why this costs nothing extra
      *
-     * The obvious approach, draw 24 random words, test both predicates,
+     * The obvious approach, draw 24 random words, test both predicates ,
      * needs 2⁻¹⁶, or ~65,536 attempts. **256× more expensive than today.**
      *
      * Instead, entropy is drawn and encoded with [Bip39.fromEntropy], which

@@ -29,7 +29,7 @@ import kotlin.math.min
  * the heap until GC decides otherwise, and can be captured by a heap dump.
  *
  * It is not a guarantee. The JVM may relocate arrays during GC and leave copies
- * behind. The design goal is to shrink the window, not to claim it is closed,
+ * behind. The design goal is to shrink the window, not to claim it is closed ,
  * the real protection is that this material never leaves Kotlin.
  */
 object Bip39 {
@@ -227,7 +227,7 @@ object Bip39 {
     fun toSeed(mnemonic: CharArray, passphrase: CharArray = CharArray(0)): ByteArray {
         // Word normalisation happens HERE, not at the call sites.
         //
-        // It used to be the caller's job, and every existing caller did it,
+        // It used to be the caller's job, and every existing caller did it ,
         // but a caller that forgets produces a silently different seed and so
         // an empty wallet, with nothing failing anywhere. Making it
         // unconditional means a new call site cannot get this wrong.
@@ -271,7 +271,7 @@ object Bip39 {
     /**
      * NFKD-normalizes and UTF-8 encodes without ever materialising a String.
      *
-     * [Normalizer] only accepts CharSequence, so a CharBuffer wrapper is used,
+     * [Normalizer] only accepts CharSequence, so a CharBuffer wrapper is used ,
      * it views the same char[] rather than copying it the way String would.
      */
     private fun normalizeToUtf8(chars: CharArray): ByteArray {

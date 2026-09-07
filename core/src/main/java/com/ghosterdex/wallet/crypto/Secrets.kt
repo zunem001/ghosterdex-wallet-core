@@ -10,7 +10,7 @@ package com.ghosterdex.wallet.crypto
  * program can never overwrite; it survives until the collector happens to reach
  * it, and until then it is visible in a heap dump, a debugger, or swap.
  *
- * Worse, the idiomatic normalisation chain,
+ * Worse, the idiomatic normalisation chain ,
  * `String(chars).trim().lowercase().split(...).joinToString(" ")`, creates
  * *five* such copies, each of the full phrase, on a path that runs on **every
  * signature**.
@@ -95,7 +95,7 @@ object Secrets {
     }
 
     /**
-     * Trims, lowercases and collapses internal whitespace runs to one space,
+     * Trims, lowercases and collapses internal whitespace runs to one space ,
      * the normalisation TON's derivation expects, entirely in place.
      *
      * ASCII-only lowercasing is deliberate: the wordlist is ASCII, and a

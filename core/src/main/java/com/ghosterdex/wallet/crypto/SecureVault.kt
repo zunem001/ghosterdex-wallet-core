@@ -192,7 +192,7 @@ class SecureVault(
      * be wrapped in a `BiometricPrompt.CryptoObject` and is unusable until the
      * prompt succeeds. Under [SecurityPolicy.NONE] it is usable immediately.
      *
-     * [policy] matters only when this call is the one that generates the key,
+     * [policy] matters only when this call is the one that generates the key ,
      * i.e. at wallet creation. An existing key keeps the parameters it was
      * born with, whatever is passed here.
      */

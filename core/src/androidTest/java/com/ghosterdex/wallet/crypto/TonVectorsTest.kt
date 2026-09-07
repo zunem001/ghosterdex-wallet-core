@@ -172,7 +172,7 @@ class TonVectorsTest {
 
     @Test
     fun tonCell_augmentationChangesHash() {
-        // "5 bits" and "8 bits with three trailing zeros" must not collide,
+        // "5 bits" and "8 bits with three trailing zeros" must not collide ,
         // that is exactly what the augmentation bit exists to prevent.
         val a = TonCell.hash(byteArrayOf(0b00110_000.toByte()), 5)
         val b = TonCell.hash(byteArrayOf(0b00110_000.toByte()), 8)

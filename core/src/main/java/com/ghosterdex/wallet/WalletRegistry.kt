@@ -107,7 +107,7 @@ object WalletRegistry {
     /**
      * Records a wallet that has been successfully sealed, and activates it.
      *
-     * Re-committing an existing slot keeps its name unless a new one is given,
+     * Re-committing an existing slot keeps its name unless a new one is given ,
      * restoring over a wallet must not silently rename it back to "Wallet 3".
      */
     fun commit(context: Context, slot: String, name: String? = null): Record {
