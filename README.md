@@ -31,6 +31,7 @@ demonstrate otherwise. Clone it, read it, run them.
 | --- | --- |
 | `Bip39`, `TonMnemonic`, `RecoveryPhrase` | phrase generation and validation |
 | `Slip10`, `TonKey`, `TonDerivation` | Ed25519 derivation, both TON schemes |
+| `TelegramWallet` | the address Telegram's own wallet gives a phrase, so an import opens that wallet |
 | `SecureVault` | Keystore sealing, the app-lock policies, key rotation |
 | `TonProofSigner`, `TonConnectSigner` | the two signature envelopes |
 | `TonCell`, `Base58`, `WalletKey` | address formats and serialisation |

@@ -222,4 +222,30 @@ object WalletDiscovery {
     fun inconclusive(outcomes: List<Outcome>): Boolean =
         outcomes.isEmpty() ||
             (outcomes.none { it is Outcome.Active } && outcomes.any { it is Outcome.Unavailable })
+
+    /**
+     * True when the phrase's Telegram wallet is in use and none of the key's
+     * own addresses is: the one case where an import takes the phrase's BIP-39
+     * key with no funded address of its own. See [TelegramWallet].
+     *
+     * [wallets] are the key's own candidates, [telegram] the Telegram wallet's
+     * answer (null when it was not asked).
+     */
+    fun telegramOnly(wallets: List<Outcome>, telegram: Outcome?): Boolean =
+        telegram is Outcome.Active && wallets.none { it is Outcome.Active }
+
+    /**
+     * [inconclusive], once the phrase's Telegram wallet was asked about too.
+     *
+     * With nothing of the key's own in use, the Telegram answer decides which
+     * key the phrase gets, and that choice is stored with the wallet for good.
+     * So a Telegram probe that did not answer is as unknown as a wallet that
+     * did not: a stall there must not seal a Telegram user into a key their
+     * wallet never used. A funded wallet of the key's own still decides alone,
+     * as it always has.
+     */
+    fun inconclusive(wallets: List<Outcome>, telegram: Outcome?, askedTelegram: Boolean): Boolean =
+        inconclusive(wallets) ||
+            (askedTelegram && wallets.none { it is Outcome.Active } &&
+                telegram !is Outcome.Active && telegram !is Outcome.Empty)
 }

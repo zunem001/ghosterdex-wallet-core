@@ -43,7 +43,11 @@ enum class TonDerivation(val id: String) {
     BIP44("bip44");
 
     companion object {
-        /** What a newly created wallet uses. */
+        /**
+         * What a newly created wallet uses, and what an import with nothing in
+         * use falls back to. The one exception is a phrase whose Telegram
+         * wallet is in use, which takes [BIP44] (see [TelegramWallet]).
+         */
         val DEFAULT = NATIVE
 
         /**
