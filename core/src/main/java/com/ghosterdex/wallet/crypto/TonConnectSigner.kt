@@ -27,6 +27,7 @@ object TonConnectSigner {
 
     private const val PREFIX = "ton-connect/sign-data/"
     private const val TEXT_TAG = "txt"
+    private const val BINARY_TAG = "bin"
 
     /** A signature in the shape `/api/execute` expects as `walletSig`. */
     data class WalletSig(
@@ -49,6 +50,37 @@ object TonConnectSigner {
         domain: String,
         timestamp: Long = System.currentTimeMillis() / 1000,
     ): WalletSig {
+        val signature = envelopeSignature(key, TEXT_TAG, text.toByteArray(StandardCharsets.UTF_8), domain, timestamp)
+        return WalletSig(
+            signatureBase64 = android.util.Base64.encodeToString(signature, android.util.Base64.NO_WRAP),
+            address = key.addressRaw,
+            timestamp = timestamp,
+            domain = domain,
+            text = text,
+        )
+    }
+
+    /**
+     * Signs [bytes] for [domain]: the same envelope, tagged as binary, for an app's own signData request in the browser.
+     * [WalletSig.text] is empty: the caller holds the bytes it asked about.
+     */
+    fun signBinary(
+        key: TonKey,
+        bytes: ByteArray,
+        domain: String,
+        timestamp: Long = System.currentTimeMillis() / 1000,
+    ): WalletSig {
+        val signature = envelopeSignature(key, BINARY_TAG, bytes, domain, timestamp)
+        return WalletSig(
+            signatureBase64 = android.util.Base64.encodeToString(signature, android.util.Base64.NO_WRAP),
+            address = key.addressRaw,
+            timestamp = timestamp,
+            domain = domain,
+            text = "",
+        )
+    }
+
+    private fun envelopeSignature(key: TonKey, tag: String, payload: ByteArray, domain: String, timestamp: Long): ByteArray {
         val addressRaw = key.addressRaw
         val parts = addressRaw.split(":")
         require(parts.size == 2) { "Malformed address: $addressRaw" }
@@ -56,7 +88,6 @@ object TonConnectSigner {
         val addressHash = hexToBytes(parts[1])
 
         val domainBytes = domain.toByteArray(StandardCharsets.UTF_8)
-        val textBytes = text.toByteArray(StandardCharsets.UTF_8)
 
         val out = ByteArrayOutputStream()
         out.write(0xFF)
@@ -67,21 +98,13 @@ object TonConnectSigner {
         out.write(be(domainBytes.size.toLong(), 4))
         out.write(domainBytes)
         out.write(be(timestamp, 8))
-        out.write(TEXT_TAG.toByteArray(StandardCharsets.UTF_8))
-        out.write(be(textBytes.size.toLong(), 4))
-        out.write(textBytes)
+        out.write(tag.toByteArray(StandardCharsets.UTF_8))
+        out.write(be(payload.size.toLong(), 4))
+        out.write(payload)
 
         val preimage = out.toByteArray()
         val digest = sha256(preimage)
-        val signature = key.sign(digest)
-
-        return WalletSig(
-            signatureBase64 = android.util.Base64.encodeToString(signature, android.util.Base64.NO_WRAP),
-            address = addressRaw,
-            timestamp = timestamp,
-            domain = domain,
-            text = text,
-        )
+        return key.sign(digest)
     }
 
     /** Big-endian encoding of [value] into [bytes] bytes. */

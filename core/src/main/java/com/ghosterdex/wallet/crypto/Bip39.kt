@@ -45,6 +45,9 @@ object Bip39 {
     @Volatile
     private var wordIndex: Map<String, Int>? = null
 
+    /** The public list itself, for the browser's phrase shield to recognise a phrase by. */
+    fun wordList(context: Context): List<String> = words(context)
+
     /**
      * Loads and caches the bundled English wordlist.
      *

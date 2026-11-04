@@ -87,8 +87,6 @@ class SecureVault(
         return if (gen == 0) base else "$base.g$gen"
     }
 
-    private val keyAlias: String get() = aliasFor(generation())
-
     // ── Public surface ───────────────────────────────────────────────────────
 
     fun hasWallet(): Boolean = prefs.contains(key(KEY_BLOB)) && prefs.contains(key(KEY_IV))
@@ -195,11 +193,21 @@ class SecureVault(
      * [policy] matters only when this call is the one that generates the key ,
      * i.e. at wallet creation. An existing key keeps the parameters it was
      * born with, whatever is passed here.
+     *
+     * A slot with no wallet in it always gets a new key. Anything already in
+     * the Keystore under its names belongs to no wallet: one that was removed,
+     * or a setup cancelled after its key was made. Reusing it would seal the
+     * new phrase under a lock chosen for something else.
      */
-    fun encryptCipher(policy: SecurityPolicy = securityPolicy()): Cipher =
-        Cipher.getInstance(TRANSFORMATION).apply {
-            init(Cipher.ENCRYPT_MODE, secretKey(policy))
+    fun encryptCipher(policy: SecurityPolicy = securityPolicy()): Cipher {
+        val key = if (hasWallet()) {
+            secretKey(policy)
+        } else {
+            deleteSlotKeys()
+            freshKeyAt(generation(), policy)
         }
+        return Cipher.getInstance(TRANSFORMATION).apply { init(Cipher.ENCRYPT_MODE, key) }
+    }
 
     /** As [encryptCipher], but for opening the vault; reads the stored IV. */
     fun decryptCipher(): Cipher {
@@ -271,11 +279,20 @@ class SecureVault(
     /**
      * An encrypt cipher for the *pending* key at [gen], creating that key
      * under [policy]. The live key is left completely alone.
+     *
+     * Always a key made here and now. Whatever sat at that alias before (a
+     * lock change the app was killed in the middle of, or an earlier wallet's
+     * key) was made for another lock, and
+     * the lock the user just chose is the one this wallet must end up with.
+     * Reusing a key made with no lock would leave a wallet that says
+     * "fingerprint" with no lock at all.
      */
-    fun rekeyCipher(gen: Int, policy: SecurityPolicy): Cipher =
-        Cipher.getInstance(TRANSFORMATION).apply {
-            init(Cipher.ENCRYPT_MODE, secretKeyAt(gen, policy))
+    fun rekeyCipher(gen: Int, policy: SecurityPolicy): Cipher {
+        check(gen != generation()) { "A re-key builds the next generation, never the live one" }
+        return Cipher.getInstance(TRANSFORMATION).apply {
+            init(Cipher.ENCRYPT_MODE, freshKeyAt(gen, policy))
         }
+    }
 
     /**
      * Seals [mnemonicUtf8] with the authenticated [cipher] and moves the
@@ -314,7 +331,12 @@ class SecureVault(
         }
     }
 
-    /** Removes the sealed phrase and destroys the Keystore key. */
+    /**
+     * Removes the sealed phrase and destroys every Keystore key the slot has.
+     *
+     * Every generation, not just the live one: no key outlives its wallet,
+     * and the next wallet in the slot starts from nothing.
+     */
     fun clear() {
         prefs.edit()
             .remove(key(KEY_BLOB)).remove(key(KEY_IV))
@@ -322,12 +344,35 @@ class SecureVault(
             .remove(key(KEY_VERSION)).remove(key(KEY_DERIVATION))
             .remove(key(KEY_POLICY)).remove(key(KEY_KEY_GEN))
             .apply()
-        runCatching {
-            KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }.deleteEntry(keyAlias)
-        }
+        deleteSlotKeys()
     }
 
     // ── Keystore key ─────────────────────────────────────────────────────────
+
+    /**
+     * Every alias in the Keystore that belongs to this slot: its base alias
+     * and each `.gN` a lock change made. Matched whole, so clearing slot 2
+     * can never touch slot 21, and the legacy slot's bare alias matches no
+     * other slot's.
+     */
+    private fun slotAliases(ks: KeyStore): List<String> {
+        val own = Regex(Regex.escape(aliasFor(0)) + """(\.g\d+)?""")
+        return ks.aliases().toList().filter { own.matches(it) }
+    }
+
+    private fun deleteSlotKeys() {
+        runCatching {
+            val ks = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
+            slotAliases(ks).forEach { alias -> runCatching { ks.deleteEntry(alias) } }
+        }
+    }
+
+    /** A key made now at [gen]'s alias, replacing anything already there. */
+    private fun freshKeyAt(gen: Int, policy: SecurityPolicy): SecretKey {
+        val alias = aliasFor(gen)
+        runCatching { KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }.deleteEntry(alias) }
+        return generateKey(alias, policy)
+    }
 
     private fun secretKey(policy: SecurityPolicy = securityPolicy()): SecretKey =
         secretKeyAt(generation(), policy)

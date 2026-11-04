@@ -127,8 +127,12 @@ object AppLock {
 
     // ── preferences ──────────────────────────────────────────────────────────
 
+    /* Two processes use this pad now (the browser runs in its own), and each would otherwise keep its own copy of the
+       failure count and overwrite the other's. Deprecated for being weak about simultaneous writes, which a person at
+       one pad at a time does not make; what it does do, reload a changed file, is the whole need here. */
+    @Suppress("DEPRECATION")
     private fun prefs(context: Context) =
-        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_MULTI_PROCESS)
 
     /** True when the user has turned the app lock on. */
     fun isEnabled(context: Context): Boolean =
@@ -319,8 +323,12 @@ object AppLock {
                         }
                         // Enrolling a new finger must invalidate this key, or
                         // anyone who can add a fingerprint to an unlocked phone
-                        // inherits the wallet.
-                        setInvalidatedByBiometricEnrollment(true)
+                        // inherits the wallet. The switch exists from Android 7.
+                        // Android 6 already does this for a key that needs a
+                        // fingerprint on every use, and calling the switch there
+                        // throws NoSuchMethodError, an Error the catch below lets
+                        // through.
+                        if (android.os.Build.VERSION.SDK_INT >= 24) setInvalidatedByBiometricEnrollment(true)
                         if (android.os.Build.VERSION.SDK_INT >= 28) setUnlockedDeviceRequired(true)
                     }
                     .build(),
